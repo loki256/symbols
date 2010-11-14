@@ -52,7 +52,6 @@ Symbols.Symbol = function(size, font, symbol) {
         ctx.fillStyle = this._power.getStyle();
         ctx.strokeRect(rect.x + 1, rect.y + 1, rect.width - 1, rect.height - 1);
         ctx.font = this.font;
-        var center = rect.getCenterPosition();
         ctx.fillText(this.symbol, position.x, position.y + this.size.height);
         ctx.restore();
     };
@@ -95,6 +94,7 @@ Symbols.SymbolLine = function(size) {
         return true;
     };
 
+
     this.draw = function(position, ctx) {
         var line_position = new Symbols.Position(0, 0);
         this.symbol_list.each(function(symbol, index) {
@@ -103,12 +103,28 @@ Symbols.SymbolLine = function(size) {
             line_position.x += symbol.size.width;
         });
     };
+
+
+    this.drawWindow = function(position, line_window, ctx) {
+        var symbol_list = this.getSymbolsInWindow(line_window.x, line_window.width);
+        if (symbol_list.length == 0) {
+            return;
+        }
+        var draw_position = new Symbols.Position(0, 0);
+        symbol_list.each(function(symbol) {
+            var symbol_pos = Symbols.addPosition(draw_position, position);
+            symbol.draw(symbol_pos, ctx);
+            draw_position.x += symbol.size.width;
+        });
+    };
+
     
     this.decreasePower = function() {
         this.symbol_list.each(function(symbol, index) {
-                symbol.decreasePower();
+            symbol.decreasePower();
         });
     }
+
 
     this.maxPower = function() {
         this.symbol_list.each(function(symbol, index) {
@@ -116,17 +132,19 @@ Symbols.SymbolLine = function(size) {
         });
     }
 
+
     this.getSymbolsInWindow = function(x, width) {
         var x_pos = 0;
+        var symbol_list = [];
         this.symbol_list.each(function(symbol, index) {
                 if ((x_pos >= x) && (x_pos <= (x + width))) {
-                    symbol.maxPower();
-                }
-                if ((x >= x_pos) && (x <= (x_pos + symbol.size.width))) {
-                    symbol.maxPower();
+                    symbol_list.push(symbol);
+                } else if ((x >= x_pos) && (x <= (x_pos + symbol.size.width))) {
+                    symbol_list.push(symbol);
                 }
                 x_pos += symbol.size.width;
             });
+        return symbol_list;
     }
 
 
@@ -146,13 +164,18 @@ Symbols.SymbolLine = function(size) {
 // -------------------------
 // SymbolMap class
 // -------------------------
-Symbols.SymbolsMap = function(position, width, height) {
+Symbols.SymbolsMap = function(full_rect, win_rect) {
 
-    this.position = position;
-    this.size = new Symbols.Size(width, height);
+    this.rect = full_rect;
+    this.position = full_rect.position;
+    this.size = full_rect.size;
+
+    this.win_rect = win_rect;
+    this.win_size = win_rect.size;
+    this.win_position = win_rect.position;
 
     this.reduce_count = 10;
-    this.style = "rgba(0, 0, 0, 0)";
+    this.style = "rgba(0, 255, 0, 0.2)";
 
     this.line_size = new Symbols.Size(this.size.width, 22);
     this.line_list = new Array();
@@ -172,7 +195,7 @@ Symbols.SymbolsMap = function(position, width, height) {
             for (var i = 0; i < text.length; i++) {
                 var ch = text.charAt(i);
                 if (!line.addChar(ch)) {
-                    // line if full ?
+                    // line is full ?
                     line = this.addNewLine();
                     if (!line.addChar(ch)) {
                         throw "Can't add char";
@@ -196,17 +219,34 @@ Symbols.SymbolsMap = function(position, width, height) {
     }
 
 
+    this.moveWindow = function(delta) {
+        this.win_rect.x += delta.x;
+        this.win_rect.y += delta.y;
+    }
+
+
     this.draw = function(ctx) {
         ctx.save();
-        ctx.fillStyle = this.style;
-        ctx.fillRect(this.position.x, this.position.y, this.size.width, this.size.height);
+
+/*      ctx.fillStyle = this.style = "rgba(0, 0, 255, 0.4)";
+        ctx.fillRect(
+            this.rect.x, this.rect.y,
+            this.rect.width, this.rect.height);
+*/
+
+        ctx.fillStyle = this.style = "rgba(0, 255, 0, 0.4)";
+        ctx.fillRect(
+            0, 0,
+            this.win_rect.width, this.win_rect.height);
 
         var current_height = 0;
-        this.line_list.each(function(line, index) {
-                var position = new Symbols.Position(0, current_height);
-                line.draw(position, ctx);
-                current_height += line.size.height;
-            });
+        var line_list = this.getLinesInRect(this.win_rect);
+        line_list.each(function(line, index) {
+            var position = new Symbols.Position(0, current_height);
+            var win = {x: this.win_rect.x, width:this.win_rect.width};
+            line.drawWindow(position, win, ctx);
+            current_height += line.size.height;
+        }, this);
         ctx.restore();
     };
 
@@ -220,20 +260,31 @@ Symbols.SymbolsMap = function(position, width, height) {
             this.reduce_count = 10;
         }
     }
-    
+   
 
-    this.getSymbolsInRect = function(rect) {
+    this.getLinesInRect = function(rect) {
+
+        var lines_list = [];
 
         var first_line = Math.floor(rect.y / this.line_size.height);
         var tmp = ((first_line + 1) * this.line_size.height) - rect.y;
         var line_num = Math.ceil((rect.height - tmp) / this.line_size.height);
+
         for (var i = first_line; i <= (first_line + line_num); i++) {
-            this.line_list[i].getSymbolsInWindow(rect.x, rect.width);
+            lines_list.push(this.line_list[i]);
         }
+        return lines_list;
     }
 
-    
-};
 
+    this.getSymbolsInRect = function(rect) {
 
+        var symbol_list = [];
+        this.getLinesInRect(rect).each(function (line) {
+            symbol_list.append(line.getSymbolsInWindow(rect.x, rect.width));
+        })
+        return symbol_list;
+    }
+
+}
 

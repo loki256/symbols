@@ -36,12 +36,35 @@ Symbols.init = function() {
     };
 
     Symbols.player = new Symbols.Player(new Symbols.Position(400, 300));
-    Symbols.map = new Symbols.SymbolsMap(new Symbols.Position(0, 0), 800, 600);
+
+    Symbols.map = new Symbols.SymbolsMap(
+        new Symbols.Rectangle(                  /// full size
+            new Symbols.Position(0, 0),
+            new Symbols.Size(800, 600)
+        ),
+        new Symbols.Rectangle(                  /// window
+            new Symbols.Position(0, 0),        
+            new Symbols.Size(640, 480)
+        )
+    );
 
     Symbols.map.addText("Hello there, ");
     for (var i = 0; i < 2500; i++) {
         Symbols.map.addText("l");
     }
+
+    Symbols.addTactEvent(0, function() {
+        Symbols.map.moveWindow({x:1, y:0})}
+    );
+
+    Symbols.addTactEvent(0, function() {
+        var symbol_list = Symbols.map.getSymbolsInRect(
+            Symbols.player.getBoardRect());
+        symbol_list.each(function (symbol, index) {
+                symbol.maxPower() });
+        }
+    );
+
 
     setInterval(Symbols.mainLoop, 50);
 };
@@ -59,10 +82,10 @@ Symbols.mainLoop = function() {
     s.player.draw(ctx);
 
     s.player.move();
-    s.map.reduceSymbolsPower();
+    //s.map.reduceSymbolsPower();
 
-    var player_rect = s.player.getBoardRect();
-    s.map.getSymbolsInRect(player_rect);
+    Symbols.runTactEvents();
+
 
 };
 
@@ -93,4 +116,26 @@ Symbols.onDblClick = function(ev) {
     Symbols.player.changeDestination(x, y, true);
 };
 
+
+Symbols.addTactEvent = function(tact_number, func) {
+    if (!Symbols.event_list) {
+        Symbols.event_list = [];
+    }
+    Symbols.event_list.push({tact_value: tact_number, tact_count: 0, callback: func});
+};
+
+
+Symbols.runTactEvents = function() {
+    if (!Symbols.event_list) {
+        return;
+    }
+    Symbols.event_list.each(function (ev) {
+        if (ev.tact_count == ev.tact_value) {
+            ev.callback();
+            ev.tact_count = 0;
+        } else {
+            ev.tact_count++;
+        }
+    });
+};
 

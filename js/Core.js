@@ -17,14 +17,10 @@ Symbols.Position.prototype.recalculate = function(velocity) {
 };
 
 
-//Symbols.Position.prototype.clone = function() {
-//    return new Symbols.Position(this.x, this.y);
-//}
-
-
 Symbols.Position.prototype.debug = function(velocity) {
     return ("x:" + this.x.toFixed(2) + ", y:" + this.y.toFixed(2));
 };
+
 
 Symbols.addPosition = function(pos1, pos2) {
     return new Symbols.Position(pos1.x + pos2.x, pos1.y + pos2.y);
