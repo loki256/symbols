@@ -7,33 +7,55 @@ var Symbols;
 
 if (!Symbols) {
     Symbols = { 
-        version: "0.1"
+        version: "0.1",
     };
 }
 
 
-Symbols.init = function() {
+// Create context
+// add debug objects
+Symbols.preInit = function() {
+
     var canvas = document.getElementById('canvas');
 
     Symbols.ctx = canvas.getContext('2d');
     if (!Symbols.ctx) {
-        alert("Canvas not supported");
+        throw ("Canvas not supported");
+    }
+
+    Symbols.debug = new Symbols.DebugInfo();
+    Symbols.addDebug = function(text) {
+        Symbols.debug.addDebug(text);
+    };
+    Symbols.addConstDebug = function(text) {
+        Symbols.debug.addConstDebug(text);
+    }
+}
+
+
+Symbols.init = function() {
+
+    try {
+        Symbols.preInit();
+    } catch (e) {
+        alert(e);
         return;
     }
+
+    var canvas = document.getElementById('canvas');
 
     canvas.addEventListener("mousemove", Symbols.onMouseMove, false);
     canvas.addEventListener("mouseout", Symbols.onMouseOut, false);
     canvas.addEventListener("dblclick", Symbols.onDblClick, false);
     canvas.addEventListener("click", Symbols.onClick, false);
 
-    Symbols.debug = new Symbols.DebugInfo();
-    Symbols.addDebug = function(text) {
-        Symbols.debug.addDebug(text);
-    };
+//    Symbols.addDebug = function(text) {
+//        Symbols.debug.addDebug(text);
+//    };
 
-    Symbols.addConstDebug = function(text) {
-        Symbols.debug.addConstDebug(text);
-    };
+//    Symbols.addConstDebug = function(text) {
+//        Symbols.debug.addConstDebug(text);
+//    };
 
     Symbols.player = new Symbols.Player(new Symbols.Position(400, 300));
 
@@ -50,12 +72,12 @@ Symbols.init = function() {
 
     Symbols.map.addText("Hello there, ");
     for (var i = 0; i < 2500; i++) {
-        Symbols.map.addText("l");
+        Symbols.map.addText("d");
     }
 
-    Symbols.addTactEvent(0, function() {
-        Symbols.map.moveWindow({x:1, y:0})}
-    );
+    //Symbols.addTactEvent(0, function() {
+    //    Symbols.map.moveWindow({x:1, y:0})}
+    //);
 
     Symbols.addTactEvent(0, function() {
         var symbol_list = Symbols.map.getSymbolsInRect(

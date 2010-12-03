@@ -39,7 +39,6 @@ Symbols.Player = function(position) {
 };
 
 
-
 Symbols.Player.prototype.move = function() {
     this.moveToDestination();
     this.position.recalculate(this.velocity); 
