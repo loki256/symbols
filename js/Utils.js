@@ -14,10 +14,13 @@ Symbols.DebugInfo = function() {
     this.draw = function(ctx) {
         if (this.enabled)
         {
-            ctx.save();
-            ctx.font = this.style;
+            //ctx.save();
+            var canvas_context = Symbols.canvas_context;
+            canvas_context.setFont(this.style);
+
             var x = this.position.x;
             var y = this.position.y;
+
             this.const_text.each(function (item, index) {
                     ctx.fillText(item, x, y);
                     y += 20;
@@ -26,7 +29,7 @@ Symbols.DebugInfo = function() {
                 ctx.fillText(this.text.shift(), this.position.x, y);
                 y += 20;
             }
-            ctx.restore();
+            //ctx.restore();
         }
     };
 };

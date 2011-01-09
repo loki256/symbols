@@ -46,14 +46,16 @@ Symbols.Symbol = function(size, font, symbol) {
     this._power = new Symbols.SymbolPower();
 
     this.draw = function(position, ctx) {
-        ctx.save();
-        var rect = new Symbols.Rectangle(position, this.size);
-        ctx.strokeStyle = this._power.getStyle();
+        var ctx = Symbols.ctx;
+        var canvas_context = Symbols.canvas_context;
+
+        //canvas_context.save();
+        canvas_context.strokeStyle(this._power.getStyle());
         ctx.fillStyle = this._power.getStyle();
-        ctx.strokeRect(rect.x + 1, rect.y + 1, rect.width - 1, rect.height - 1);
-        ctx.font = this.font;
+        ctx.strokeRect(position.x + 1, position.y + 1, this.size.width - 1, this.size.height - 1);
+        canvas_context.setFont(this.font);
         ctx.fillText(this.symbol, position.x, position.y + this.size.height);
-        ctx.restore();
+        //ctx.restore();
     };
 
     this.decreasePower = function() {
@@ -186,8 +188,6 @@ Symbols.SymbolsMap = function(full_rect, win_rect) {
     this.size = full_rect.size;
 
     this.win_rect = win_rect;
-    this.win_size = win_rect.size;
-    this.win_position = win_rect.position;
 
     this.reduce_count = 10;
     this.style = "rgba(0, 255, 0, 0.2)";
@@ -234,19 +234,31 @@ Symbols.SymbolsMap = function(full_rect, win_rect) {
     }
 
 
-    this.moveWindow = function(delta) {
-        this.win_rect.x += delta.x;
-        this.win_rect.y += delta.y;
+    this.moveWindow = function(delta_position) {
+        if ((delta_position.x > 0) && (this.win_rect.right >= this.rect.right)) {
+            delta_position.x = 0;
+        }
+        if ((delta_position.x < 0) && (this.win_rect.x <= this.rect.x)) {
+            delta_position.x = 0;
+        }
+        if ((delta_position.y > 0) && (this.win_rect.bottom >= this.rect.bottom)) {
+            delta_position.y = 0;
+        }
+        if ((delta_position.y < 0) && (this.win_rect.y <= this.rect.y)) {
+            delta_position.y = 0;
+        }
+        this.win_rect.position.add(delta_position);
     }
 
 
     this.draw = function(ctx) {
+
         ctx.save();
 
-      ctx.fillStyle = "rgba(0, 0, 255, 0.4)";
-      ctx.fillRect(
-          this.rect.x, this.rect.y,
-          this.rect.width, this.rect.height);
+        ctx.fillStyle = "rgba(0, 0, 255, 0.4)";
+        ctx.fillRect(
+                this.rect.x, this.rect.y,
+                this.rect.width, this.rect.height);
 
 
 //        ctx.fillStyle = this.style = "rgba(0, 255, 0, 0.4)";
@@ -284,8 +296,10 @@ Symbols.SymbolsMap = function(full_rect, win_rect) {
 
         var lines_list = [];
 
-        var first_line = Math.floor(rect.y / this.line_size.height);
-        var tmp = ((first_line + 1) * this.line_size.height) - rect.y;
+        var y_point = rect.y > 0 ? rect.y : 0;
+
+        var first_line = Math.floor(y_point / this.line_size.height);
+        var tmp = ((first_line + 1) * this.line_size.height) - y_point;
         var line_num = Math.ceil((rect.height - tmp) / this.line_size.height);
 
         // error here
@@ -307,9 +321,13 @@ Symbols.SymbolsMap = function(full_rect, win_rect) {
 
     this.getSymbolsInRect = function(rect) {
 
+        // bug
+        var real_rect = rect.clone();
+        real_rect.position.add(this.win_rect.position);
+
         var symbol_list = [];
-        this.getLinesInRect(rect).each(function (line) {
-            symbol_list.append(line.getSymbolsInWindow(rect.x, rect.width));
+        this.getLinesInRect(real_rect).each(function (line) {
+            symbol_list.append(line.getSymbolsInWindow(real_rect.x, real_rect.width));
         })
         return symbol_list;
     }

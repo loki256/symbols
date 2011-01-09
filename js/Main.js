@@ -23,6 +23,8 @@ Symbols.preInit = function() {
         throw ("Canvas not supported");
     }
 
+    Symbols.canvas_context = new Symbols.CanvasContext(Symbols.ctx); 
+
     Symbols.debug = new Symbols.DebugInfo();
     Symbols.addDebug = function(text) {
         Symbols.debug.addDebug(text);
@@ -62,11 +64,11 @@ Symbols.init = function() {
     Symbols.map = new Symbols.SymbolsMap(
         new Symbols.Rectangle(                  /// full size
             new Symbols.Position(0, 0),
-            new Symbols.Size(800, 600)
+            new Symbols.Size(1024, 768)
         ),
         new Symbols.Rectangle(                  /// window
             new Symbols.Position(0, 0),        
-            new Symbols.Size(640, 480)
+            new Symbols.Size(800, 600)
         )
     );
 
@@ -75,18 +77,33 @@ Symbols.init = function() {
         Symbols.map.addText("d");
     }
 
-    //Symbols.addTactEvent(0, function() {
-    //    Symbols.map.moveWindow({x:1, y:0})}
-    //);
+    Symbols.addTactEvent(0, function() {
+        var delta_position = {x: 0, y:0};
+        var wquarter = Symbols.map.win_rect.width / 4;
+        if (Symbols.player.position.x >= (Symbols.map.win_rect.width - wquarter)) {
+            delta_position.x = 1;
+        }
+        if (Symbols.player.position.x <= wquarter) {
+            delta_position.x = -1;
+        }
+
+        var hquarter = Symbols.map.win_rect.height / 4;
+        if (Symbols.player.position.y >= (Symbols.map.win_rect.height - hquarter)) {
+            delta_position.y = 1;
+        }
+        if (Symbols.player.position.y <= hquarter) {
+            delta_position.y = -1;
+        }
+
+        Symbols.map.moveWindow(delta_position);
+    });
 
     Symbols.addTactEvent(0, function() {
-        var symbol_list = Symbols.map.getSymbolsInRect(
-            Symbols.player.getBoardRect());
+        var symbol_list = Symbols.map.getSymbolsInRect(Symbols.player.getBoardRect());
         symbol_list.each(function (symbol, index) {
-                symbol.maxPower() });
-        }
-    );
-
+            symbol.maxPower()
+        });
+    });
 
     setInterval(Symbols.mainLoop, 50);
 };
