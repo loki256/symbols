@@ -50,10 +50,10 @@ Symbols.Symbol = function(size, font, symbol) {
         var canvas_context = Symbols.canvas_context;
 
         //canvas_context.save();
-        canvas_context.strokeStyle(this._power.getStyle());
-        ctx.fillStyle = this._power.getStyle();
-        ctx.strokeRect(position.x + 1, position.y + 1, this.size.width - 1, this.size.height - 1);
+        //canvas_context.setStrokeStyle(this._power.getStyle());
+        //ctx.strokeRect(position.x + 1, position.y + 1, this.size.width - 1, this.size.height - 1);
         canvas_context.setFont(this.font);
+        canvas_context.setFillStyle(this._power.getStyle());
         ctx.fillText(this.symbol, position.x, position.y + this.size.height);
         //ctx.restore();
     };
@@ -98,11 +98,11 @@ Symbols.SymbolLine = function(size) {
 
 
     this.draw = function(position, ctx) {
-        var line_position = new Symbols.Position(0, 0);
+        var symbol_position = new Symbols.Position(0, 0);
+        symbol_position.add(position);
         this.symbol_list.each(function(symbol, index) {
-            var symbol_pos = Symbols.addPosition(line_position, position);
             symbol.draw(symbol_pos, ctx);
-            line_position.x += symbol.size.width;
+            symbol_pos.x += symbol.size.width;
         });
     };
 
@@ -113,12 +113,12 @@ Symbols.SymbolLine = function(size) {
             return;
         }
         var draw_position = new Symbols.Position(0, 0);
+        draw_position.add(position);
         if (symbol_list.offset) {
             draw_position.x += symbol_list.offset 
         }
         symbol_list.each(function(symbol) {
-            var symbol_pos = Symbols.addPosition(draw_position, position);
-            symbol.draw(symbol_pos, ctx);
+            symbol.draw(draw_position, ctx);
             draw_position.x += symbol.size.width;
         });
     };
@@ -189,10 +189,11 @@ Symbols.SymbolsMap = function(full_rect, win_rect) {
 
     this.win_rect = win_rect;
 
-    this.reduce_count = 10;
+    // constants (yet)
     this.style = "rgba(0, 255, 0, 0.2)";
-
     this.line_size = new Symbols.Size(this.size.width, 22);
+    this.reduce_count = 10;
+
     this.line_list = new Array();
 
     /// methods
@@ -248,7 +249,13 @@ Symbols.SymbolsMap = function(full_rect, win_rect) {
             delta_position.y = 0;
         }
         this.win_rect.position.add(delta_position);
-    }
+    };
+
+
+    this.clear = function() {
+        this.is_full = false;
+        this.line_list.length = 0; 
+    };
 
 
     this.draw = function(ctx) {

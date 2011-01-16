@@ -1,0 +1,45 @@
+<html>
+<head>
+    <title>File reader test</title>
+    <script type='text/javascript'>
+
+        function load_file() {
+            var input = document.getElementById('finput');
+            if (!input.files[0]) {
+                bodyAppend("p", "Can't open file");
+                return;
+            }
+            var file = input.files[0];
+
+            fr = new FileReader();
+            fr.onload = getText;
+            fr.onerror = getError;
+
+            var blob = file.slice(0, 5);
+            fr.readAsBinaryString(blob);
+        };
+
+        function getText(evt) {
+            var result = evt.target.result;
+            bodyAppend("p", result);
+        };
+
+        function getError(evt) {
+            var err = evt.target;
+            bodyAppend("p", "Error");
+        };
+
+        function bodyAppend(tagName, innerHTML) {
+            var elm = document.createElement(tagName);
+            elm.innerHTML = innerHTML;
+            document.body.appendChild(elm);
+        };
+
+    </script>
+</head>
+<body>
+    <input type="file" id="finput">
+    <input type="button" value="load" onclick="load_file();">
+</body>
+</html>
+

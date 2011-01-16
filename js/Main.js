@@ -51,16 +51,6 @@ Symbols.init = function() {
     canvas.addEventListener("dblclick", Symbols.onDblClick, false);
     canvas.addEventListener("click", Symbols.onClick, false);
 
-//    Symbols.addDebug = function(text) {
-//        Symbols.debug.addDebug(text);
-//    };
-
-//    Symbols.addConstDebug = function(text) {
-//        Symbols.debug.addConstDebug(text);
-//    };
-
-    Symbols.player = new Symbols.Player(new Symbols.Position(400, 300));
-
     Symbols.map = new Symbols.SymbolsMap(
         new Symbols.Rectangle(                  /// full size
             new Symbols.Position(0, 0),
@@ -71,39 +61,8 @@ Symbols.init = function() {
             new Symbols.Size(800, 600)
         )
     );
-
-    Symbols.map.addText("Hello there, ");
-    for (var i = 0; i < 2500; i++) {
-        Symbols.map.addText("d");
-    }
-
-    Symbols.addTactEvent(0, function() {
-        var delta_position = {x: 0, y:0};
-        var wquarter = Symbols.map.win_rect.width / 4;
-        if (Symbols.player.position.x >= (Symbols.map.win_rect.width - wquarter)) {
-            delta_position.x = 1;
-        }
-        if (Symbols.player.position.x <= wquarter) {
-            delta_position.x = -1;
-        }
-
-        var hquarter = Symbols.map.win_rect.height / 4;
-        if (Symbols.player.position.y >= (Symbols.map.win_rect.height - hquarter)) {
-            delta_position.y = 1;
-        }
-        if (Symbols.player.position.y <= hquarter) {
-            delta_position.y = -1;
-        }
-
-        Symbols.map.moveWindow(delta_position);
-    });
-
-    Symbols.addTactEvent(0, function() {
-        var symbol_list = Symbols.map.getSymbolsInRect(Symbols.player.getBoardRect());
-        symbol_list.each(function (symbol, index) {
-            symbol.maxPower()
-        });
-    });
+    Symbols.player = new Symbols.Player();
+    Symbols.event_manager = new Symbols.EventManager();
 
     setInterval(Symbols.mainLoop, 50);
 };
@@ -111,21 +70,16 @@ Symbols.init = function() {
 
 Symbols.mainLoop = function() {
 
-    var s = Symbols;
     var ctx = Symbols.ctx;
 
     ctx.clearRect(0, 0, 800, 600);
 
-    s.map.draw(ctx);
-    s.debug.draw(ctx);
-    s.player.draw(ctx);
+    Symbols.map.draw(ctx);
+    Symbols.debug.draw(ctx);
+    Symbols.player.draw(ctx);
+    Symbols.player.move();
 
-    s.player.move();
-    //s.map.reduceSymbolsPower();
-
-    Symbols.runTactEvents();
-
-
+    Symbols.event_manager.runTactEvents();
 };
 
 
@@ -156,25 +110,29 @@ Symbols.onDblClick = function(ev) {
 };
 
 
-Symbols.addTactEvent = function(tact_number, func) {
-    if (!Symbols.event_list) {
-        Symbols.event_list = [];
-    }
-    Symbols.event_list.push({tact_value: tact_number, tact_count: 0, callback: func});
-};
+//
+// uploadFile function 
+// debug only
+//
+Symbols.uploadFile = function(input) {
 
-
-Symbols.runTactEvents = function() {
-    if (!Symbols.event_list) {
+    var file = input.files[0];
+    if (!file) {
+        console.log("No file");
         return;
     }
-    Symbols.event_list.each(function (ev) {
-        if (ev.tact_count == ev.tact_value) {
-            ev.callback();
-            ev.tact_count = 0;
-        } else {
-            ev.tact_count++;
-        }
-    });
+    var reader = new FileReader();
+
+    reader.onload = function(evt) {
+        Symbols.event_manager.resetMap(new Symbols.SimpleProveder(evt.target.result))
+        Symbols.event_manager.resetPlayer();
+        //console.log(str);
+    };
+
+    reader.onerror = function(evt) {
+        alert("error reading file");
+    };
+
+    reader.readAsText(file);
 };
 
