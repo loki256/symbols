@@ -55,6 +55,7 @@ The main parameters, which can be improved during game are: amount of health, at
 # Tasks
 ## Tasks format (date in format YYMMDD + optional counter)
 
+140904 - Create log panel (left of main canvas)
 140903-8 Stop loop when player 
 140903-1 Fix bug with offset of power symbols
 140903-2 Power should be from min to max

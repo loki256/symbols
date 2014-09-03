@@ -49,6 +49,7 @@ Symbols.init = function() {
 
     canvas.addEventListener("mousemove", Symbols.onMouseMove, false);
     canvas.addEventListener("mouseout", Symbols.onMouseOut, false);
+    canvas.addEventListener("mouseover", Symbols.onMouseOver, false);
     canvas.addEventListener("dblclick", Symbols.onDblClick, false);
     canvas.addEventListener("click", Symbols.onClick, false);
 
@@ -59,7 +60,8 @@ Symbols.init = function() {
 
     Symbols.event_manager = new Symbols.EventManager();
 
-    setInterval(Symbols.mainLoop, 50);
+    Symbols.mainLoopInterval = setInterval(Symbols.mainLoop, 50);
+    Symbols.isRunning = true;
 };
 
 
@@ -95,7 +97,22 @@ Symbols.onMouseMove = function(ev) {
 
 
 Symbols.onMouseOut = function(ev) {
-    Symbols.player.stop();
+    console.log("onMouseOut");
+    if (Symbols.isRunning) {
+        Symbols.player.stop();
+        clearInterval(Symbols.mainLoopInterval);
+        Symbols.isRunning = false;
+        console.log("isRunning: " + Symbols.isRunning);
+    }
+};
+
+Symbols.onMouseOver = function(ev) {
+    console.log("onMouseOver");
+    if (!Symbols.isRunning) {
+        Symbols.mainLoopInterval = setInterval(Symbols.mainLoop, 50);
+        Symbols.isRunning = true;
+        console.log("isRunning: " + Symbols.isRunning);
+    }
 };
 
 
