@@ -2,24 +2,26 @@
 // Player functions and classes
 //
 
+require(["Config"])
+
 // -------------------------
 // Position class
 // -------------------------
 Symbols.Player = Class({
-    initialize: function(position) {
+    initialize: function(config) {
 
-        this.reset(position);
-        this.size = new Symbols.Size(20, 30);
-
-        this.color = "rgb(0, 0, 255)";
-        this.speed = 3.5;
+        this.reset(config.position);
+        this.size = config.size;
+        this.color = config.color;
+        this.speed = config.speed;
     },
 
     draw: function(ctx) {
         ctx.save();
+        var canvas_context = Symbols.canvas_context;
 //        ctx.translate(this.position.x, this.position.y);
-        ctx.strokeStyle = this.color;
-//        ctx.fillStyle = this.color;
+        canvas_context.setStrokeStyle(this.color);
+//        canvas_context.setFillStyle(this.color);
         var rect = this.getBoardRect();
         ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
         //ctx.beginPath();
@@ -43,8 +45,8 @@ Symbols.Player = Class({
 
     move: function() {
         this.moveToDestination();
-        this.position.recalculate(this.velocity); 
-        Symbols.addDebug(this.position.debug());
+        this.position.recalculate(this.velocity);
+        Symbols.addDebug("player position: " + this.position.debug());
     },
 
     stop: function() {
@@ -57,7 +59,7 @@ Symbols.Player = Class({
     changeDestination: function(x, y, fixed_destination) {
         if (fixed_destination || !this.fixed_destination)
         {
-            this.destination = new Symbols.Position(x, y); 
+            this.destination = new Symbols.Position(x, y);
             this.fixed_destination = fixed_destination;
         }
     },
@@ -82,12 +84,12 @@ Symbols.Player = Class({
         {
             this.fixed_destination = false;
             speed = this.speed / 2;
-        } 
+        }
         if (dist > 70) {
             speed = this.speed;
         }
         if (dist > 200) {
-            speed = this.speed * dist / 200; 
+            speed = this.speed * dist / 200;
         }
 
         // change velocity
@@ -95,8 +97,8 @@ Symbols.Player = Class({
         var vy = (dy - py) / dist;
         this.velocity = new Symbols.Velosity(vx, vy, speed);
 
-        Symbols.addDebug(dist.toFixed(2));
-        Symbols.addDebug(vx.toFixed(3) + " " + vy.toFixed(3));
+        Symbols.addDebug("distance: " + dist.toFixed(2));
+        Symbols.addDebug("velocity dv: " + vx.toFixed(3) + " " + vy.toFixed(3));
     }
 
 });

@@ -1,204 +1,47 @@
-// 
-// Symbol object
-//
 
-// -------------------------
-// SymbolPower class
-// -------------------------
-Symbols.SymbolPower = function() {
-    this.max_value = 50;
-    this._value = Symbols.Rand(this.max_value);
-
-    this.increase = function() {
-        this._value++;
-        if (this._value > this.max_value) {
-            this._value = this.max_value;
-        }
-    };
-
-    this.decrease = function() {
-        this._value--;
-        if (this._value <= 1) {
-            this._value = 1;
-        }
-    };
-
-    this.setMax = function() {
-        this._value = this.max_value;
-    };
-
-    this.getStyle = function() {
-        var color = Math.round((255 / this.max_value) * (this.max_value - this._value));
-        return "rgb(255, " + color + ", " + color + ")";
-    };
-};
-
-
-// -------------------------
-// Symbol class
-// -------------------------
-Symbols.Symbol = function(size, font, symbol) {
-
-    this.size = size;
-    this.symbol = symbol;
-    this.font = font;
-
-    this._power = new Symbols.SymbolPower();
-
-    this.draw = function(position, ctx) {
-        var ctx = Symbols.ctx;
-        var canvas_context = Symbols.canvas_context;
-
-        //canvas_context.save();
-        //canvas_context.setStrokeStyle(this._power.getStyle());
-        //ctx.strokeRect(position.x + 1, position.y + 1, this.size.width - 1, this.size.height - 1);
-        canvas_context.setFont(this.font);
-        canvas_context.setFillStyle(this._power.getStyle());
-        ctx.fillText(this.symbol, position.x, position.y + this.size.height);
-        //ctx.restore();
-    };
-
-    this.decreasePower = function() {
-        this._power.decrease();
-    };
-
-    this.increasePower = function() {
-        this._power.increase();
-    };
-
-    this.maxPower = function() {
-        this._power.setMax();
-    };
-};
-
-
-// -------------------------
-// SymbolLine class
-// -------------------------
-Symbols.SymbolLine = function(size) {
-
-    this.size = size;
-    this.font = "22pt Courier";
-
-    this.current_width = 0;
-    this.symbol_list = new Array();
-
-    // throw on can't add
-    this.addChar = function(ch) {
-        var char_width = this.calcCharWidth(ch);
-        if ((char_width + this.current_width) > this.size.width) {
-            return false;
-        }
-        this.current_width += char_width;
-
-        var symbol_size = new Symbols.Size(char_width, this.size.height);
-        this.symbol_list.push(new Symbols.Symbol(symbol_size, this.font, ch));
-        return true;
-    };
-
-
-    this.draw = function(position, ctx) {
-        var symbol_position = new Symbols.Position(0, 0);
-        symbol_position.add(position);
-        this.symbol_list.each(function(symbol, index) {
-            symbol.draw(symbol_pos, ctx);
-            symbol_pos.x += symbol.size.width;
-        });
-    };
-
-
-    this.drawWindow = function(position, line_window, ctx) {
-        var symbol_list = this.getSymbolsInWindow(line_window.x, line_window.width);
-        if (symbol_list.length == 0) {
-            return;
-        }
-        var draw_position = new Symbols.Position(0, 0);
-        draw_position.add(position);
-        if (symbol_list.offset) {
-            draw_position.x += symbol_list.offset 
-        }
-        symbol_list.each(function(symbol) {
-            symbol.draw(draw_position, ctx);
-            draw_position.x += symbol.size.width;
-        });
-    };
-
-    
-    this.decreasePower = function() {
-        this.symbol_list.each(function(symbol, index) {
-            symbol.decreasePower();
-        });
-    }
-
-
-    this.maxPower = function() {
-        this.symbol_list.each(function(symbol, index) {
-                symbol.maxPower();
-        });
-    }
-
-
-    this.getSymbolsInWindow = function(x, width) {
-        var first_symbol_pos;
-
-        var x_pos = 0;
-        var symbol_list = [];
-        this.symbol_list.each(function(symbol, index) {
-            if (
-                ((x_pos >= x) && (x_pos <= (x + width))) || 
-                ((x >= x_pos) && (x <= (x_pos + symbol.size.width)))
-            )
-            {
-                if (first_symbol_pos === undefined) {
-                    first_symbol_pos = x_pos;
-                }
-                symbol_list.push(symbol);
-            }
-            x_pos += symbol.size.width;
-        });
-
-            // get offset
-        if (first_symbol_pos !== undefined) {
-            symbol_list.offset = first_symbol_pos - x; 
-        }
-        return symbol_list;
-    }
-
-
-    this.calcCharWidth = function(ch) {
-        // !! used global context here
-        var ctx = Symbols.ctx;
-        ctx.save();
-        ctx.font = this.font;
-        var measure = ctx.measureText(ch);
-        var width = measure.width;
-        ctx.restore();
-        return width;
-    }
-}
-
+require(["Line", "Symbol", "Config"]);
 
 // -------------------------
 // SymbolMap class
 // -------------------------
-Symbols.SymbolsMap = function(full_rect, win_rect) {
+// FIXME Change to Page class
+Symbols.SymbolsMap = Class({
 
-    this.rect = full_rect;
-    this.position = full_rect.position;
-    this.size = full_rect.size;
+    initialize: function(config) {
 
-    this.win_rect = win_rect;
+        this.config = config;
 
-    // constants (yet)
-    this.style = "rgba(0, 255, 0, 0.2)";
-    this.line_size = new Symbols.Size(this.size.width, 22);
-    this.reduce_count = 10;
+        this.rect = new Symbols.Rectangle(
+            new Symbols.Position(0, 0),
+            new Symbols.Size(
+                this.config.full_size.width,
+                this.config.full_size.height
+                )
+            );
 
-    this.line_list = new Array();
+        this.win_rect = new Symbols.Rectangle(
+            new Symbols.Position(0, 0),
+            new Symbols.Size(
+                this.config.win_size.width,
+                this.config.win_size.height
+                )
+            );
+
+        this.style = this.config.color;
+
+        this.position = this.rect.position;
+        this.size = this.rect.size;
+
+        // constants (yet)
+        this.line_size = new Symbols.Size(this.size.width, 22);
+        this.reduce_count = 10;
+
+        this.line_list = [];
+    },
 
     /// methods
     //
-    this.addText = function(text) {
+    addText : function(text) {
         if (this.is_full) {
             return;
         }
@@ -222,20 +65,20 @@ Symbols.SymbolsMap = function(full_rect, win_rect) {
             Symbols.addConstDebug(e + ", current line numbers: " + this.line_list.length);
             this.is_full = true;
         }
-    };
+    },
 
 
-    this.addNewLine = function() {
+    addNewLine : function() {
         var lines = this.line_list.length;
         if ((lines + 1) * this.line_size.height > this.size.height) {
             throw "Too many lines";
         }
-        this.line_list.push(new Symbols.SymbolLine(this.line_size));
+        this.line_list.push(new Symbols.Line(this.config.line));
         return this.line_list.getLast();
-    }
+    },
 
 
-    this.moveWindow = function(delta_position) {
+    moveWindow : function(delta_position) {
         if ((delta_position.x > 0) && (this.win_rect.right >= this.rect.right)) {
             delta_position.x = 0;
         }
@@ -249,29 +92,31 @@ Symbols.SymbolsMap = function(full_rect, win_rect) {
             delta_position.y = 0;
         }
         this.win_rect.position.add(delta_position);
-    };
+    },
 
 
-    this.clear = function() {
+    clear : function() {
         this.is_full = false;
         this.line_list.length = 0; 
-    };
+    },
 
 
-    this.draw = function(ctx) {
+    draw : function(ctx) {
 
-        ctx.save();
+//        ctx.drawImage(Symbols.paper,
+//                      this.win_rect.position.x,
+//                      this.win_rect.position.y,
+//                      this.win_rect.size.width,
+//                      this.win_rect.size.height,
+//                      0,
+//                      0,
+//                      this.win_rect.size.width,
+//                      this.win_rect.size.height
+//                      );
 
-        ctx.fillStyle = "rgba(0, 0, 255, 0.4)";
-        ctx.fillRect(
-                this.rect.x, this.rect.y,
-                this.rect.width, this.rect.height);
-
-
-//        ctx.fillStyle = this.style = "rgba(0, 255, 0, 0.4)";
-//        ctx.fillRect(
-//            0, 0,
-//            this.win_rect.width, this.win_rect.height);
+        var canvas_context = Symbols.canvas_context;
+        //canvas_context.setFillStyle(this.style)
+        //ctx.fillRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height);
 
         var line_list = this.getLinesInRect(this.win_rect);
         var current_height = 0;
@@ -279,16 +124,19 @@ Symbols.SymbolsMap = function(full_rect, win_rect) {
             current_height += line_list.offset;
         }
         line_list.each(function(line, index) {
-            var win = {x: this.win_rect.x, width:this.win_rect.width};
+            var win = {
+                x: this.win_rect.x,
+                width:this.win_rect.width
+                };
             var position = new Symbols.Position(0, current_height);
             line.drawWindow(position, win, ctx);
             current_height += line.size.height;
+        // TODO Why this ?
         }, this);
-        ctx.restore();
-    };
+    },
 
 
-    this.reduceSymbolsPower = function() {
+    reduceSymbolsPower : function() {
         this.reduce_count--; 
         if (this.reduce_count <= 0) {
             this.line_list.each(function(line, index) {
@@ -296,10 +144,10 @@ Symbols.SymbolsMap = function(full_rect, win_rect) {
             });
             this.reduce_count = 10;
         }
-    }
+    },
    
 
-    this.getLinesInRect = function(rect) {
+    getLinesInRect : function(rect) {
 
         var lines_list = [];
 
@@ -319,14 +167,14 @@ Symbols.SymbolsMap = function(full_rect, win_rect) {
 
         //if (!lines_list.empty())
         //{
-            lines_list.offset = (first_line * this.line_size.height) - rect.y;
+        lines_list.offset = (first_line * this.line_size.height) - rect.y;
         //}
 
         return lines_list;
-    }
+    },
 
 
-    this.getSymbolsInRect = function(rect) {
+    getSymbolsInRect : function(rect) {
 
         // bug
         var real_rect = rect.clone();
@@ -335,9 +183,8 @@ Symbols.SymbolsMap = function(full_rect, win_rect) {
         var symbol_list = [];
         this.getLinesInRect(real_rect).each(function (line) {
             symbol_list.append(line.getSymbolsInWindow(real_rect.x, real_rect.width));
-        })
+        });
         return symbol_list;
     }
-
-}
+});
 

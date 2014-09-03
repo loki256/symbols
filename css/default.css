@@ -1,11 +1,19 @@
 .default {
-    font-size: 18px; color:black;
+    font-size: 18px;
+    color:black;
 }
 
-form {
-    font-size: 18px; color:blue;
+header p {
+    font-size: 25px;
+    font-family: 'Nova Square', cursive;
+    text-align: center;
 }
 
-input {
-    font-size: 18px; color:black;
+#canvas {
+    /* use in in code */
+    /*width: 800px;*/
+    /*height: 600px;*/
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
 }

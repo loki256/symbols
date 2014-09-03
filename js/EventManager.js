@@ -1,10 +1,10 @@
 /*
- * main game logic here 
+ * main game logic here
  */
 
 Symbols.SimpleProveder = function(str) {
     this.list = Array.from(str);
-    for (var i = 0; i < 2500; i++) {
+    for (var i = 0; i < 1500; i++) {
         this.list.push("d");
     }
     this.getNextSymbol = function() {
@@ -13,11 +13,28 @@ Symbols.SimpleProveder = function(str) {
 };
 
 
+Symbols.RequestProvider = function(resource_name) {
+    this.str = "";
+    this.index = 0;
+
+    var request = new Request({
+        url: resource_name,
+        async: false,
+        onSuccess: function(responseText, responseXML) {
+            this.str = responseText;
+        }.bind(this)}).get();
+
+    this.getNextSymbol = function() {
+        return this.str[this.index++];
+    }
+}
+
+
 // EventManager class
 Symbols.EventManager = Class({
 
     initialize: function() {
-        this.resetMap(new Symbols.SimpleProveder("Hello"));
+        this.resetMap(new Symbols.RequestProvider("resources/level1.txt"));
         this.resetPlayer();
         this.initEvents();
     },
@@ -29,7 +46,7 @@ Symbols.EventManager = Class({
             if (ch) {
                 Symbols.map.addText(ch);
             }
-        } while (ch); 
+        } while (ch);
     },
 
     resetPlayer: function(position) {
@@ -40,7 +57,7 @@ Symbols.EventManager = Class({
     },
 
     //
-    // private functions 
+    // private functions
     //
     addTactEvent: function(tact_number, func) {
         if (!this.event_list) {
@@ -67,7 +84,7 @@ Symbols.EventManager = Class({
 
             // move window of map when player reach some side (1/4 of width, height)
         this.addTactEvent(0, function() {
-            var delta_position = {x: 0, y:0};
+            var delta_position = {x:0, y:0};
             var wquarter = Symbols.map.win_rect.width / 4;
             if (Symbols.player.position.x >= (Symbols.map.win_rect.width - wquarter)) {
                 delta_position.x = 1;

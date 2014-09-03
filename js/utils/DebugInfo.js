@@ -1,15 +1,29 @@
 //
-// Utils functions and classes
+// Print varios info (for debugging)
 //
 
 Symbols.DebugInfo = function() {
 
-    this.enabled = true;
-    this.style = "12pt Arial";
-    this.position = { "x":600, "y":20 };
+    this.enabled = false;
+
+    if (!this.enabled) {
+        this.draw = function(ctx) {};
+        this.addConstDebug = function(text) {};
+        this.addDebug = function(text) {};
+        return;
+    }
+
+    this.style = "15pt Arial";
+    this.position = { x:100, y:100 };
 
     this.text = new Array();
     this.const_text = new Array();
+
+    var canvas = document.createElement("canvas");
+    canvas.id = "debug";
+    canvas.width = "100";
+    canvas.height = "100";
+    document.body.appendChild(canvas)
 
     this.draw = function(ctx) {
         if (this.enabled)
@@ -32,22 +46,13 @@ Symbols.DebugInfo = function() {
             //ctx.restore();
         }
     };
+
+    this.addDebug = function(text) {
+        this.text.push(text);
+    };
+
+    this.addConstDebug = function(text) {
+        this.const_text.push(text);
+    };
 };
-
-
-Symbols.DebugInfo.prototype.addDebug = function(text) {
-    this.text.push(text);
-};
-
-Symbols.DebugInfo.prototype.addConstDebug = function(text) {
-    this.const_text.push(text);
-};
-
-
-
-
-// Get random int between 0 and value
-Symbols.Rand = function(val) {
-    return Math.floor(Math.random() * (val + 1));
-}
 

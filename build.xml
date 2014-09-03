@@ -1,0 +1,55 @@
+<project name="SymbolsProject" default="main">
+
+    <property name="webRoot" value="/var/www/symbols"> </property>
+    <property name="src" value="./"> </property>
+    <property name="dest" value="${webRoot}/symbols"> </property>
+    <property name="browser" value="C:\Users\georg\AppData\Local\Google\Chrome\Application\chrome.exe"> </property>
+    <property name="output_index" value="localhost:8000"> </property>
+    <property name="nginx_vhost_src" value="nginx/symbols.conf"/>
+    <property name="nginx_vhost_dest" value="/etc/nginx/sites-enabled/symbols.conf"/>
+    <property name="" value="false"/>
+
+    <target name="main" description="Main target" depends="install">
+        <echo>ok</echo>
+    </target>
+
+    <target name="install" depends="clear_root,checkNginxVhost,nginx_reload">
+        <echo>installing version</echo>
+        <copy todir="${dest}">
+            <fileset dir="${src}"></fileset>
+        </copy>
+    </target>
+
+    <target name="checkNginxVhost">
+        <echo>test if need to reload nginx</echo>
+        <uptodate property="nginx_need_reload"
+            srcfile="${nginx_vhost_src}"
+            targetfile="${nginx_vhost_dest}"/>
+    </target>
+
+    <target name="nginx_reload" unless="nginx_need_reload"
+        depends="nginx_vhost">
+        <echo>reload nginx</echo>
+        <exec executable="/etc/init.d/nginx">
+            <arg value="reload"/>
+        </exec>
+    </target>
+
+    <target name="nginx_vhost" unless="nginx_need_reload">
+        <echo>install nginx vhost</echo>
+        <copy file="${nginx_vhost_src}" tofile="${nginx_vhost_dest}"/>
+    </target>
+
+    <target name="clear_root">
+        <echo>clean ${webRoot}</echo>
+        <delete dir="${dest}"/>
+    </target>
+
+    <target name="run">
+        <exec executable="${browser}" spawn="yes">
+		<arg line="${output_index}" />
+	</exec>
+    </target>
+
+</project>
+

@@ -6,33 +6,34 @@
 var Symbols;
 
 if (!Symbols) {
-    Symbols = { 
-        version: "0.1",
+    Symbols = {
+        version: "0.1"
     };
 }
 
+// other modules
+require(["CanvasContext", "Config", "utils/DebugInfo", "SymbolsMap", "Player", "EventManager"]);
 
 // Create context
 // add debug objects
 Symbols.preInit = function() {
 
-    var canvas = document.getElementById('canvas');
+    var canvas = $('canvas');
+    Symbols.canvas = canvas;
+
+    Symbols.paper = $('paper_id');
 
     Symbols.ctx = canvas.getContext('2d');
     if (!Symbols.ctx) {
         throw ("Canvas not supported");
     }
 
-    Symbols.canvas_context = new Symbols.CanvasContext(Symbols.ctx); 
+    Symbols.canvas_context = new Symbols.CanvasContext(Symbols.ctx);
 
     Symbols.debug = new Symbols.DebugInfo();
-    Symbols.addDebug = function(text) {
-        Symbols.debug.addDebug(text);
-    };
-    Symbols.addConstDebug = function(text) {
-        Symbols.debug.addConstDebug(text);
-    }
-}
+    Symbols.addDebug = Symbols.debug.addDebug.bind(Symbols.debug);
+    Symbols.addConstDebug = Symbols.debug.addConstDebug.bind(Symbols.debug);
+};
 
 
 Symbols.init = function() {
@@ -40,7 +41,7 @@ Symbols.init = function() {
     try {
         Symbols.preInit();
     } catch (e) {
-        alert(e);
+        console.error("Can't preinit symbols" + e);
         return;
     }
 
@@ -51,17 +52,11 @@ Symbols.init = function() {
     canvas.addEventListener("dblclick", Symbols.onDblClick, false);
     canvas.addEventListener("click", Symbols.onClick, false);
 
-    Symbols.map = new Symbols.SymbolsMap(
-        new Symbols.Rectangle(                  /// full size
-            new Symbols.Position(0, 0),
-            new Symbols.Size(1024, 768)
-        ),
-        new Symbols.Rectangle(                  /// window
-            new Symbols.Position(0, 0),        
-            new Symbols.Size(800, 600)
-        )
-    );
-    Symbols.player = new Symbols.Player();
+    var config = new Symbols.Config();
+
+    Symbols.map = new Symbols.SymbolsMap(config.page);
+    Symbols.player = new Symbols.Player(config.player);
+
     Symbols.event_manager = new Symbols.EventManager();
 
     setInterval(Symbols.mainLoop, 50);
@@ -71,8 +66,11 @@ Symbols.init = function() {
 Symbols.mainLoop = function() {
 
     var ctx = Symbols.ctx;
+    var canvas = $('canvas');
 
-    ctx.clearRect(0, 0, 800, 600);
+    ctx.save();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
 
     Symbols.map.draw(ctx);
     Symbols.debug.draw(ctx);
@@ -83,10 +81,16 @@ Symbols.mainLoop = function() {
 };
 
 
+Symbols._getMouseCoordinates = function(ev) {
+    var x = ev.clientX - Symbols.canvas.getBoundingClientRect().left;
+    var y = ev.clientY - Symbols.canvas.getBoundingClientRect().top;
+    return {"x":x, "y":y}
+}
+
+
 Symbols.onMouseMove = function(ev) {
-    var x = ev.clientX;
-    var y = ev.clientY;
-    Symbols.player.changeDestination(x, y);
+    var point = Symbols._getMouseCoordinates(ev);
+    Symbols.player.changeDestination(point.x, point.y);
 };
 
 
@@ -107,32 +111,5 @@ Symbols.onDblClick = function(ev) {
     var x = ev.clientX;
     var y = ev.clientY;
     Symbols.player.changeDestination(x, y, true);
-};
-
-
-//
-// uploadFile function 
-// debug only
-//
-Symbols.uploadFile = function(input) {
-
-    var file = input.files[0];
-    if (!file) {
-        console.log("No file");
-        return;
-    }
-    var reader = new FileReader();
-
-    reader.onload = function(evt) {
-        Symbols.event_manager.resetMap(new Symbols.SimpleProveder(evt.target.result))
-        Symbols.event_manager.resetPlayer();
-        //console.log(str);
-    };
-
-    reader.onerror = function(evt) {
-        alert("error reading file");
-    };
-
-    reader.readAsText(file);
 };
 
