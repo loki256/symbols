@@ -46,7 +46,7 @@ Symbols.Player = Class({
     move: function() {
         this.moveToDestination();
         this.position.recalculate(this.velocity);
-        Symbols.addDebug("player position: " + this.position.debug());
+        //Symbols.addDebug("player position: " + this.position.debug());
     },
 
     stop: function() {
@@ -97,8 +97,8 @@ Symbols.Player = Class({
         var vy = (dy - py) / dist;
         this.velocity = new Symbols.Velosity(vx, vy, speed);
 
-        Symbols.addDebug("distance: " + dist.toFixed(2));
-        Symbols.addDebug("velocity dv: " + vx.toFixed(3) + " " + vy.toFixed(3));
+//        Symbols.addDebug("distance: " + dist.toFixed(2));
+//        Symbols.addDebug("velocity dv: " + vx.toFixed(3) + " " + vy.toFixed(3));
     }
 
 });

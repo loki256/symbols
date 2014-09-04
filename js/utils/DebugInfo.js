@@ -55,4 +55,3 @@ Symbols.DebugInfo = function() {
         this.const_text.push(text);
     };
 };
-

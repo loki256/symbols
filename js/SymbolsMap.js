@@ -1,5 +1,5 @@
 
-require(["Line", "Symbol", "Config"]);
+require(["Line", "Symbol", "Config", "utils/Logger"]);
 
 // -------------------------
 // SymbolMap class
@@ -62,7 +62,7 @@ Symbols.SymbolsMap = Class({
                 }
             }
         } catch (e) {
-            Symbols.addConstDebug(e + ", current line numbers: " + this.line_list.length);
+            logger.debug(e + ", current line numbers: " + this.line_list.length);
             this.is_full = true;
         }
     },

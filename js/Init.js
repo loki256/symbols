@@ -2,6 +2,8 @@
 // Symbols main code
 //
 
+/* global logger:false */
+
 // global namespace
 var Symbols;
 
@@ -12,11 +14,11 @@ if (!Symbols) {
 }
 
 // other modules
-require(["CanvasContext", "Config", "utils/DebugInfo", "SymbolsMap", "Player", "EventManager"]);
+require(["CanvasContext", "Config", "utils/Logger", "SymbolsMap", "Player", "EventManager"]);
 
 // Create context
 // add debug objects
-Symbols.preInit = function() {
+Symbols.preInit = function () {
 
     var canvas = $('canvas');
     Symbols.canvas = canvas;
@@ -29,21 +31,15 @@ Symbols.preInit = function() {
     }
 
     Symbols.canvas_context = new Symbols.CanvasContext(Symbols.ctx);
-
-    Symbols.debug = new Symbols.DebugInfo();
-    Symbols.addDebug = Symbols.debug.addDebug.bind(Symbols.debug);
-    Symbols.addConstDebug = Symbols.debug.addConstDebug.bind(Symbols.debug);
 };
 
 
-Symbols.init = function() {
+Symbols.init = function () {
 
-    try {
-        Symbols.preInit();
-    } catch (e) {
-        console.error("Can't preinit symbols" + e);
-        return;
-    }
+    "use strict";
+    logger.debug(" Start ");
+
+    Symbols.preInit();
 
     var canvas = document.getElementById('canvas');
 
@@ -75,7 +71,6 @@ Symbols.mainLoop = function() {
     ctx.restore();
 
     Symbols.map.draw(ctx);
-    Symbols.debug.draw(ctx);
     Symbols.player.draw(ctx);
     Symbols.player.move();
 
@@ -87,7 +82,7 @@ Symbols._getMouseCoordinates = function(ev) {
     var x = ev.clientX - Symbols.canvas.getBoundingClientRect().left;
     var y = ev.clientY - Symbols.canvas.getBoundingClientRect().top;
     return {"x":x, "y":y}
-}
+};
 
 
 Symbols.onMouseMove = function(ev) {
@@ -96,8 +91,8 @@ Symbols.onMouseMove = function(ev) {
 };
 
 
-Symbols.onMouseOut = function(ev) {
-    console.log("onMouseOut");
+Symbols.onMouseOut = function() {
+    logger.debug("onMouseOut");
     if (Symbols.isRunning) {
         Symbols.player.stop();
         clearInterval(Symbols.mainLoopInterval);
@@ -106,8 +101,8 @@ Symbols.onMouseOut = function(ev) {
     }
 };
 
-Symbols.onMouseOver = function(ev) {
-    console.log("onMouseOver");
+Symbols.onMouseOver = function() {
+    logger.debug("onMouseOver");
     if (!Symbols.isRunning) {
         Symbols.mainLoopInterval = setInterval(Symbols.mainLoop, 50);
         Symbols.isRunning = true;

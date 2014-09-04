@@ -7,11 +7,19 @@
         <script data-main="js/Init" src="/js/require.js"></script>
     </head>
     <body onload="Symbols.init();">
-        <header>
-            <p>Symbols</p>
-        </header>
+        <div class="logs">
+            <div class="clear-log">
+                <a href="#" onclick="logger.clear();">Clear log</a>
+            </div>
+            <div class="log">
+                <span>init<br></span>
+            </div>
+        </div>
         <div class="canvas_cl">
-          <canvas id="canvas"></canvas>
+            <header>
+                <p>Symbols</p>
+            </header>
+            <canvas id="canvas"></canvas>
         </div>
         <!--<image id="paper_id" src="/images/paper.jpg" style="display:none"></image>-->
     </body>

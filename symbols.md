@@ -54,9 +54,8 @@ The main parameters, which can be improved during game are: amount of health, at
 
 # Tasks
 ## Tasks format (date in format YYMMDD + optional counter)
-
 140904 - Create log panel (left of main canvas)
-140903-8 Stop loop when player 
+140904-2 - Bug with mouse click
 140903-1 Fix bug with offset of power symbols
 140903-2 Power should be from min to max
 140903-3 buitify output (left, rigth, top margins, font colour)
@@ -67,6 +66,7 @@ The main parameters, which can be improved during game are: amount of health, at
 140903-7. set background for whole page (make some pics for it.)
 
 # Complited Tasks
+140903-8 Stop loop when player 
 +. Переписать engine на node.js (Вместо текущего static nginx)
 + Set image background for canvas (paper) (2014-01-07 Tue 10:38 PM)
 + fix bug with mouse coordinates (some strange offset) 2014-01-07 Tue 02:11 AM
